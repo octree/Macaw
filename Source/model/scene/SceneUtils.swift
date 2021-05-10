@@ -69,6 +69,7 @@ class SceneUtils {
         result?.panHandlers = referenceNode.panHandlers
         result?.rotateHandlers = referenceNode.rotateHandlers
         result?.pinchHandlers = referenceNode.pinchHandlers
+        result?.externalAttributes = referenceNode.externalAttributes
 
         return result
     }

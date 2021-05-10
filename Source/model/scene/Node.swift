@@ -38,6 +38,7 @@ open class Node: Drawable {
         set(val) { effectVar.value = val }
     }
 
+    open var externalAttributes: [String: String] = [:]
     var animations: [BasicAnimation] = []
 
     // MARK: - Searching

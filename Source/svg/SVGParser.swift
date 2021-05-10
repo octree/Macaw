@@ -77,6 +77,12 @@ open class SVGParser {
         return try SVGParser(text).parse()
     }
 
+    open class func parse(text: String, externalAttributeNames: [String]) throws -> Node {
+        let parser = SVGParser(text)
+        parser.externalAttributeNames = externalAttributeNames
+        return try parser.parse()
+    }
+
     let availableStyleAttributes = ["stroke",
                                     "stroke-width",
                                     "stroke-opacity",
@@ -100,6 +106,8 @@ open class SVGParser {
                                     "text-anchor",
                                     "visibility",
                                     "display"]
+
+    public var externalAttributeNames: [String] = []
 
     fileprivate let xmlString: String
     fileprivate let initialPosition: Transform
@@ -208,7 +216,7 @@ open class SVGParser {
         let heightAttributeNil = element.allAttributes["height"] == nil
         let viewBoxAttributeNil = element.allAttributes["viewBox"] == nil
 
-        if  widthAttributeNil && heightAttributeNil && viewBoxAttributeNil {
+        if widthAttributeNil && heightAttributeNil && viewBoxAttributeNil {
             return .none
         }
 
@@ -277,6 +285,13 @@ open class SVGParser {
                let filterId = parseIdFromUrl(filterString),
                let effect = defEffects[filterId] {
                 result.effect = effect
+            }
+            if let result = result {
+                externalAttributeNames.forEach {
+                    if let attr = element.attribute(by: $0)?.text {
+                        result.externalAttributes[$0] = attr
+                    }
+                }
             }
         }
         return result
@@ -470,8 +485,8 @@ open class SVGParser {
             if pattern.children.isEmpty {
                 return parentPattern?.content
             } else if pattern.children.count == 1,
-                let child = pattern.children.first,
-                let shape = try parseNode(child) as? Shape {
+                      let child = pattern.children.first,
+                      let shape = try parseNode(child) as? Shape {
                 return shape
             } else {
                 var shapes = [Shape]()
@@ -687,7 +702,7 @@ open class SVGParser {
 
         let hasCurrentColor = styleAttributes[SVGKeys.fill] == SVGKeys.currentColor
 
-        self.availableStyleAttributes.forEach { availableAttribute in
+        availableStyleAttributes.forEach { availableAttribute in
             if let styleAttribute = element.allAttributes[availableAttribute]?.text, styleAttribute != "inherit" {
 
                 if !hasCurrentColor || availableAttribute != SVGKeys.color {
@@ -1239,7 +1254,8 @@ open class SVGParser {
         return Font(
             name: getFontName(attributes) ?? fontName ?? "Serif",
             size: getFontSize(attributes) ?? fontSize ?? 12,
-            weight: getFontWeight(attributes) ?? fontWeight ?? "normal")
+            weight: getFontWeight(attributes) ?? fontWeight ?? "normal"
+        )
     }
 
     fileprivate func getTspanPosition(_ element: SWXMLHash.XMLElement,
@@ -1293,7 +1309,7 @@ open class SVGParser {
         if id.hasPrefix("#") {
             id = id.replacingOccurrences(of: "#", with: "")
         }
-        if let referenceNode = self.defNodes[id] {
+        if let referenceNode = defNodes[id] {
             if usedReferenced[id] == nil {
                 usedReferenced[id] = id
                 defer {
@@ -1706,7 +1722,7 @@ open class SVGParser {
             return .none
         }
         if !attributeValue.contains("%") {
-            return self.getDoubleValue(element, attribute: attribute)
+            return getDoubleValue(element, attribute: attribute)
         } else {
             let value = attributeValue.replacingOccurrences(of: "%", with: "")
             if let doubleValue = Double(value) {
@@ -1941,7 +1957,7 @@ private class PathDataReader {
             while index < data.count {
                 let end = index + argCount
                 if end > data.count {
-                    // TODO need to generate error:
+                    // TODO: need to generate error:
                     // "Path '\(type)' has invalid number of arguments: \(data.count)"
                     break
                 }
@@ -2160,7 +2176,7 @@ private class PathDataReader {
 
 }
 
-fileprivate extension String {
+private extension String {
     func substringWithOffset(fromStart: Int, fromEnd: Int) -> String {
         let start = index(startIndex, offsetBy: fromStart)
         let end = index(endIndex, offsetBy: -fromEnd)
@@ -2168,7 +2184,7 @@ fileprivate extension String {
     }
 }
 
-fileprivate class UserSpaceLocus {
+private class UserSpaceLocus {
     let locus: Locus
     let userSpace: Bool
 
@@ -2178,7 +2194,7 @@ fileprivate class UserSpaceLocus {
     }
 }
 
-fileprivate class UserSpaceNode {
+private class UserSpaceNode {
     let node: Node
     let userSpace: Bool
 
@@ -2188,7 +2204,7 @@ fileprivate class UserSpaceNode {
     }
 }
 
-fileprivate class UserSpacePattern {
+private class UserSpacePattern {
     let content: Node
     let bounds: Rect
     let userSpace: Bool
@@ -2202,13 +2218,13 @@ fileprivate class UserSpacePattern {
     }
 }
 
-fileprivate enum SVGKeys {
+private enum SVGKeys {
     static let fill = "fill"
     static let color = "color"
     static let currentColor = "currentColor"
 }
 
-fileprivate extension Scanner {
+private extension Scanner {
     /// A version of `scanDouble()`, available for an earlier OS.
     func scannedDouble() -> Double? {
         if #available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
@@ -2248,7 +2264,7 @@ fileprivate extension Scanner {
             return scanUpTo(substring, into: &string) ? string as String? : nil
         }
     }
-    
+
     /// A version of `scanString(_:)`, available for an earlier OS.
     func scannedString(_ searchString: String) -> String? {
         if #available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
@@ -2260,7 +2276,7 @@ fileprivate extension Scanner {
     }
 }
 
-fileprivate extension CharacterSet {
+private extension CharacterSet {
     /// Latin alphabet characters.
     static let latinAlphabet = CharacterSet(charactersIn: "a"..."z")
         .union(CharacterSet(charactersIn: "A"..."Z"))
