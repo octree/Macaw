@@ -141,12 +141,12 @@ open class SVGParser {
     }
 
     fileprivate func parse() throws -> Group {
-        let config = SWXMLHash.config { config in
+        let config = XMLHash.config { config in
             config.shouldProcessNamespaces = true
         }
         let parsedXml = config.parse(xmlString)
 
-        var svgElement: SWXMLHash.XMLElement?
+        var svgElement: XMLHash.XMLElement?
         for child in parsedXml.children {
             if let element = child.element {
                 if element.name == "svg" {
@@ -211,7 +211,7 @@ open class SVGParser {
         }
     }
 
-    fileprivate func parseViewBox(_ element: SWXMLHash.XMLElement) throws -> SVGNodeLayout? {
+    fileprivate func parseViewBox(_ element: XMLHash.XMLElement) throws -> SVGNodeLayout? {
         let widthAttributeNil = element.allAttributes["width"] == nil
         let heightAttributeNil = element.allAttributes["height"] == nil
         let viewBoxAttributeNil = element.allAttributes["viewBox"] == nil
@@ -523,7 +523,7 @@ open class SVGParser {
         return Group(contents: groupNodes, place: getPosition(element), tag: getTag(element))
     }
 
-    fileprivate func getPosition(_ element: SWXMLHash.XMLElement) -> Transform {
+    fileprivate func getPosition(_ element: XMLHash.XMLElement) -> Transform {
         guard let transformAttribute = element.allAttributes["transform"]?.text else {
             return Transform.identity
         }
@@ -681,7 +681,7 @@ open class SVGParser {
     }
 
     fileprivate func getStyleAttributes(_ groupAttributes: [String: String],
-                                        element: SWXMLHash.XMLElement) -> [String: String] {
+                                        element: XMLHash.XMLElement) -> [String: String] {
         var styleAttributes: [String: String] = groupAttributes
 
         for (att, val) in styles.getStyles(element: element) {
@@ -891,7 +891,7 @@ open class SVGParser {
         return dashes
     }
 
-    fileprivate func getMatrix(_ element: SWXMLHash.XMLElement, attribute: String) -> [Double] {
+	fileprivate func getMatrix(_ element: XMLHash.XMLElement, attribute: String) -> [Double] {
         var result = [Double]()
         if let values = element.allAttributes[attribute]?.text {
             let separatedValues = values.components(separatedBy: CharacterSet(charactersIn: " ,"))
@@ -911,7 +911,7 @@ open class SVGParser {
         return 0
     }
 
-    fileprivate func getTag(_ element: SWXMLHash.XMLElement) -> [String] {
+    fileprivate func getTag(_ element: XMLHash.XMLElement) -> [String] {
         let id = element.allAttributes["id"]?.text
         return id.map { [$0] } ?? []
     }
@@ -1096,7 +1096,7 @@ open class SVGParser {
         return Align.min
     }
 
-    fileprivate func parseSimpleText(_ text: SWXMLHash.XMLElement,
+    fileprivate func parseSimpleText(_ text: XMLHash.XMLElement,
                                      textAnchor: String?,
                                      fill: Fill?,
                                      stroke: Stroke?,
@@ -1171,7 +1171,7 @@ open class SVGParser {
                             baseline: .alphabetic,
                             place: place,
                             opacity: opacity)
-            } else if let tspanElement = element as? SWXMLHash.XMLElement,
+            } else if let tspanElement = element as? XMLHash.XMLElement,
                       tspanElement.name == "tspan" {
                 // parse as <tspan> element
                 // ultimately skip it if it cannot be parsed
@@ -1202,7 +1202,7 @@ open class SVGParser {
         return collection
     }
 
-    fileprivate func parseTspan(_ element: SWXMLHash.XMLElement,
+    fileprivate func parseTspan(_ element: XMLHash.XMLElement,
                                 withWhitespace: Bool = false,
                                 textAnchor: String?,
                                 fill: Fill?,
@@ -1258,7 +1258,7 @@ open class SVGParser {
         )
     }
 
-    fileprivate func getTspanPosition(_ element: SWXMLHash.XMLElement,
+    fileprivate func getTspanPosition(_ element: XMLHash.XMLElement,
                                       bounds: Rect,
                                       previousCollectedTspan: Node?,
                                       withWhitespace: inout Bool) -> Transform {
@@ -1669,14 +1669,14 @@ open class SVGParser {
         return .none
     }
 
-    fileprivate func getDoubleValue(_ element: SWXMLHash.XMLElement, attribute: String) -> Double? {
+    fileprivate func getDoubleValue(_ element: XMLHash.XMLElement, attribute: String) -> Double? {
         guard let attributeValue = element.allAttributes[attribute]?.text else {
             return .none
         }
         return doubleFromString(attributeValue)
     }
 
-    fileprivate func getDimensionValue(_ element: SWXMLHash.XMLElement, attribute: String) -> SVGLength? {
+    fileprivate func getDimensionValue(_ element: XMLHash.XMLElement, attribute: String) -> SVGLength? {
         guard let attributeValue = element.allAttributes[attribute]?.text else {
             return .none
         }
@@ -1717,7 +1717,7 @@ open class SVGParser {
         }
     }
 
-    fileprivate func getDoubleValueFromPercentage(_ element: SWXMLHash.XMLElement, attribute: String) -> Double? {
+    fileprivate func getDoubleValueFromPercentage(_ element: XMLHash.XMLElement, attribute: String) -> Double? {
         guard let attributeValue = element.allAttributes[attribute]?.text else {
             return .none
         }
@@ -1732,7 +1732,7 @@ open class SVGParser {
         return .none
     }
 
-    fileprivate func getIntValue(_ element: SWXMLHash.XMLElement, attribute: String) -> Int? {
+    fileprivate func getIntValue(_ element: XMLHash.XMLElement, attribute: String) -> Int? {
         if let attributeValue = element.allAttributes[attribute]?.text {
             if let doubleValue = Double(attributeValue) {
                 return Int(doubleValue)
